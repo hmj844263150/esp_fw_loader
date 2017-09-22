@@ -1,0 +1,37 @@
+############################### wifi parameters ####################################
+#define   WIFI_SSID  wifi-11
+#define   WIFI_PWD   sumof1+1=2
+
+############################### LOAD parameters ####################################
+#define   CHIP_TYPE     ESP8266 #ESP32 or ESP8266
+
+#define   ESP_DOWNLOAD_MODE      2  # 1:Ram download mode, 2:Flash download mode 
+#define   RAM_IMAGE_PATH       ./image/8266stub.bin
+
+#define   FLASH_FREQ   40m    # 40m or 26m or 20m or 80m
+#define   FLASH_MODE   qio    # qio or qout or dio or dout
+#define   FLASH_SIZE   16Mb   # ESP32:1MB/2MB/4MB/8MB/16MB ESP8266/8285:4Mb/2Mb/8Mb/16Mb/32Mb/16Mb-C1/32Mb-C1
+
+#define   FLASH_BIN_NUM   3   # must be a number and no more than 8
+
+#define   FLASH_BIN_NAME  8266_at/boot.bin
+#define   FLASH_BIN_ADDR  0x00
+
+#define   FLASH_BIN_NAME  8266_at/esp_init.bin
+#define   FLASH_BIN_ADDR  0x1fc000
+
+#define   FLASH_BIN_NAME  8266_at/user1.bin
+#define   FLASH_BIN_ADDR  0x1000
+
+
+############################### verify parameters ####################################
+#define   VERIFY_BIN_VER     v1.0.0     # for check bin version
+#define   VERIFY_TOOL_VER    v1.0.0     # for tool version ctrl
+#define   VERIFY_BECTH_NO    c0392       # becth Number
+#define   VERIFY_TOOL_NO     1          # 1~4
+
+#define   VERIFY_EN     TRUE           # TRUE or FALSE
+#define   VERIFY_VALUE  ready          # self def
+#define   VERIFY_TMO    3              # N sec for timeout
+#define   VERIFY_BUAD   115200          # accroding crystalFreq 40M-115200  26M-74880
+#####################################################################################

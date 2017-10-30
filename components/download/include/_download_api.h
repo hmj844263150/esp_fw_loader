@@ -194,6 +194,7 @@ VERIFY_PARAM* getVerifyParams(void);
 WIFI_PARAM* getWifiParams(void);
 LOAD_PARAM* getLoadParams(void);
 ERR_STATUS verify_flash(void);
+ERR_STATUS verify_ram(void);
 uint32_t get_flash_id_stub(void);
 uint32_t get_flash_id(void);
 ERR_STATUS get_module_result(void);

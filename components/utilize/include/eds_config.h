@@ -4,7 +4,7 @@
 #include "driver/uart.h"
 #include "eds_error_no.h"
 
-#define DEBUG		0
+#define DEBUG		1
 #define RUN_STUB	1
 #define NEW_VERSION	1
 
@@ -48,6 +48,7 @@ enum MODULE_STATUS{ //module opration status
 	MS_WAIT_MODULE,
 	MS_FW_DOWNLOAD,
 	MS_MDL_TEST,
+	MS_LOAD_RAM,
 	MS_FW_CHECK,
 };
 

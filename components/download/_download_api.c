@@ -145,8 +145,32 @@ ERR_STATUS verify_flash(void){
 	uint32_t len=0;
 	for(int i=0; i<verify_param->verify_tmo*100; i++){
 		len = uart_read_bytes(UART_PORT, recvDate, BUF_SIZE, 10 / portTICK_RATE_MS);
-		//printf("%s\n", recvDate);
+		printf("%s\n", recvDate);
 		if(strstr((char*)recvDate, (char*)verify_param->verify_value) != NULL)
+			return SUCCESS;
+	}
+	return 1;
+}
+
+ERR_STATUS verify_ram(void){
+	VERIFY_PARAM *verify_param = getVerifyParams();
+	ENABLE_CHIP;
+	uart_set_baudrate(UART_PORT, verify_param->verify_buadrate);
+	uint8_t recvData[BUF_SIZE];
+	uint32_t len=0;
+	for(int i=0; i<verify_param->verify_tmo*10; i++){
+		len = uart_read_bytes(UART_PORT, recvData, BUF_SIZE, 100 / portTICK_RATE_MS);
+		if(len > 0){
+			printf("%s\n", recvData);
+#if DEBUG
+			//print recv raw data
+			printf("%d:len:%d\n",i,len);
+			for(int j=0; j<len; j++)
+				printf("%02x ", *(recvData+j));
+			printf("\n");
+#endif
+		}
+		if(strstr((char*)recvData, (char*)verify_param->verify_value) != NULL)
 			return SUCCESS;
 	}
 	return 1;
@@ -273,7 +297,7 @@ static ERR_STATUS _mem_finish(uint32_t entrypoint){
 		if(DEBUG) printf("%02x ", *(send_data.data+i));
 	if(DEBUG) printf("\n");
 	*/
-	if(check_command(send_data, &recv_data, true) != 0){
+	if(check_command(send_data, &recv_data, false) != 0){
 		if(DEBUG) printf("err:send finish failed\n");
 		return 1;
 	}
@@ -354,6 +378,7 @@ ERR_STATUS try_load_ram(void){
 	_mem_finish(image.header.entrypoint);
 	//if(data != NULL)
 	//	free(data);
+	fclose(f);
 	return SUCCESS;
 }
 

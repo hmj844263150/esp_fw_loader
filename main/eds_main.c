@@ -170,8 +170,25 @@ void eds_task(void *pvParameter)
 						module_status = MS_FW_DOWNLOAD;
 					else if(sd_param->load_param->download_mode == MDL_TEST)
 						module_status = MS_MDL_TEST;
+					else if(sd_param->load_param->download_mode == LOAD_RAM)
+						module_status = MS_LOAD_RAM;
 				}
 				break;
+			case MS_LOAD_RAM:
+				LCD_stageChange(MS_LOAD_RAM, false, sd_param->verify_param->tool_no);
+				if(eds_load_ram() != SUCCESS){
+					opt_flag = false;
+					printf("download not success, but you can try again\n");
+					LCD_drawCentreString("load failed", LCD_LOCATION_LOG, 2, COLOR_WHITE, COLOR_BLACK);
+					module_status = MS_FW_CHECK;
+				}
+				else{
+					opt_flag = true;
+					LCD_drawCentreString("load success", LCD_LOCATION_LOG, 2, COLOR_WHITE, COLOR_BLACK);
+					module_status = MS_FW_CHECK;
+				}
+				break;
+				
 			case MS_FW_DOWNLOAD:
 				LCD_stageChange(MS_FW_DOWNLOAD, false, sd_param->verify_param->tool_no);
 				if(eds_firmware_download() != SUCCESS)

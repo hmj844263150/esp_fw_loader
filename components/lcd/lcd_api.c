@@ -843,6 +843,10 @@ void LCD_stageChange(uint8_t module_stage, bool load_result, uint8_t tool_no){
 			fillRect(5,58,230,72,COLOR_YELLOW); 
 			LCD_drawCentreString("Testing...", LCD_LOCATION_WORK_STAGE, 4, COLOR_YELLOW, COLOR_RED);
 			break;
+		case MS_LOAD_RAM:
+			fillRect(5,58,230,72,COLOR_YELLOW); 
+			LCD_drawCentreString("Load to Ram", LCD_LOCATION_WORK_STAGE, 4, COLOR_YELLOW, COLOR_RED);
+			break;
 		case MS_FW_CHECK:
 			if(load_result){
 				sprintf(prtStr, "%d-PASS", tool_no);

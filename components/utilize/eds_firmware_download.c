@@ -15,10 +15,27 @@ int module_test_cpp();
 
 
 ERR_STATUS eds_load_ram(void){
-	if(try_load_ram() != 0){
+	ERR_STATUS errno = 0;
+
+	//sync and conn chip
+	if(eds_connect() != 0)		
+		return ERR_FD_CONN;
+
+	LCD_drawCentreString("connect success", LCD_LOCATION_LOG, 2, COLOR_WHITE, COLOR_BLACK);
+	if(DEBUG) printf("connect to chip success\n");
+
+	if(try_load_ram() != SUCCESS){
 		if(DEBUG) printf("load to ram failed\n");
 		return ERR_FW_DOWNLOAD;
 	}
+	if(DEBUG) printf("load to ram fin\n");
+	
+	VERIFY_PARAM *verify_param = getVerifyParams();
+	if(verify_param->verify_en){
+		if(verify_ram()!= SUCCESS)
+			return ERR_FW_DOWNLOAD;
+	}
+	
 	return SUCCESS;
 }
 
@@ -246,5 +263,4 @@ ERR_STATUS eds_module_test(char* mdl_logs){
 	}
 	return SUCCESS;
 }
-
 

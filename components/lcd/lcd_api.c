@@ -2,11 +2,11 @@
 #include "lcd_func.h"
 #include "spi_lcd.h"
 #include <stdlib.h> 
-#include "load_fonts.h"
-#include "font16.h"
-#include "font32.h"
-#include "font64.h"
-#include "font7s.h"
+#include "Load_fonts.h"
+#include "Font16.h"
+#include "Font32.h"
+#include "Font64.h"
+#include "Font7s.h"
 
 
 #define swap(x,y)	(x=(x)+(y), y=(x)-(y), x=(x)-(y))

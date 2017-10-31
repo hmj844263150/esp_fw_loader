@@ -12,6 +12,7 @@
 #include <sys/unistd.h>
 #include "esp_vfs_fat.h"
 #include "eds_driver_init.h"
+#include "esp_spi_flash.h"
 
 #include "soc/soc.h"
 #include "soc/rtc.h"
@@ -304,15 +305,63 @@ static ERR_STATUS _mem_finish(uint32_t entrypoint){
 	return SUCCESS;
 }
 
+ERR_STATUS try_load_ram_from_flash(uint32_t flash_begin){
+	ERR_STATUS errno = 0;
+	uint32_t offset, foffset, datalen;
+	int size,totle;
+	int16_t seq=0;
+	uint8_t data[ESP_RAM_BLOCK];
+
+	IMAGE_HEADER image_head;
+	foffset = 0;
+
+	spi_flash_read(flash_begin+foffset, &image_head, 8);
+	foffset += 8;
+	if(image_head.magic != ESP_IMAGE_MAGIC)
+		return 1;
+
+
+	for(int i=0; i<image_head.segments; i++){
+		spi_flash_read(flash_begin+foffset, &offset, 4);
+		foffset += 4;
+		spi_flash_read(flash_begin+foffset, &size, 4);
+		foffset += 4;
+
+		if(DEBUG) printf("now send segment%d, offset:%04x, size:%04x\n", i, offset, size);
+		if(_mem_begin(size, ceil(1.0*size/ESP_RAM_BLOCK), ESP_RAM_BLOCK, offset) != 0){
+			if(DEBUG) printf("send mem begin error\n");
+			return 1;
+		}
+		
+		seq=0;
+		
+		totle = size;
+		while(size > 0){
+			datalen = size < ESP_RAM_BLOCK ? size : ESP_RAM_BLOCK;
+			//get_SegmentData(stub_path, data, foffset+(seq*ESP_RAM_BLOCK), datalen);
+			spi_flash_read(flash_begin+foffset, data, datalen);
+			foffset += datalen;
+			if(_mem_block(data, seq, datalen)==0){
+				printf("\rcompete:%.1f%%", 100.0*(totle-size)/totle);
+#if DEBUG
+				if(DEBUG) printf("send block %d success; ", seq);
+				if(DEBUG) printf("size:%d\n", size);
+#endif
+			}
+			else{
+				if(DEBUG) printf("send block %d failed\n", seq);
+				return 2;
+			}
+			size -= ESP_RAM_BLOCK;
+			seq ++;
+		}
+	}
+	_mem_finish(image_head.entrypoint);
+	return SUCCESS;
+}
 
 ERR_STATUS try_load_ram(void){
 	ERR_STATUS errno = 0;
-	SLIP_DATA slip_send={
-				.msg_type 	= 0,
-				.cmd 		= 0,
-				.data_size	= 0,
-				.extra_data	= 0,
-				};
 	
 	IMAGE image = {.segment = NULL};
 	

@@ -8,6 +8,7 @@
 #include "esp_log.h"
 #include "driver/uart.h"
 #include "driver/gpio.h"
+#include "esp_spi_flash.h"
 
 #include "esp_vfs_fat.h"
 #include "driver/sdmmc_host.h"
@@ -161,19 +162,25 @@ void rtc_modual_init(void)
 }	
 
 
-ERR_STATUS eds_driver_init(void){
+ERR_STATUS eds_driver_init(enum BOARD_TYPE board_type){
 	
 	int err_no=0;
 	err_no |= gpio_driver_init();
 	if(0==err_no) printf("gpio init fin\n");
 	err_no |= uart_init();
-	
 	if(0==err_no) printf("uart init fin\n");
-	err_no |= sd_init();
-	if(0==err_no) printf("sd card init fin\n");
-	vTaskDelay(100);
-	err_no |= spi_lcd_init();
-	if(0==err_no) printf("lcd init fin\n");
+	
+	if(board_type == BOT_WROVERKIT){
+		err_no |= sd_init();
+		if(0==err_no) printf("sd card init fin\n");
+		vTaskDelay(100);
+		err_no |= spi_lcd_init();
+		if(0==err_no) printf("lcd init fin\n");
+	}
+	else if(board_type == BOT_8089AGING){
+		spi_flash_init();
+	}
+
 	if(err_no != SUCCESS)
 		return ERR_DRIVER;
 	return SUCCESS;

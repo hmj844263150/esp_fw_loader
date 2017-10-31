@@ -14,7 +14,7 @@
 int module_test_cpp();
 
 
-ERR_STATUS eds_load_ram(void){
+ERR_STATUS eds_load_ram(){
 	ERR_STATUS errno = 0;
 
 	//sync and conn chip
@@ -48,6 +48,30 @@ ERR_STATUS eds_connect(void){
 	return try_connect(false);
 
 }
+
+ERR_STATUS eds_8089_aging(uint32_t flash_begin){
+	ERR_STATUS errno = 0;
+	if(eds_connect() != 0)		
+		return ERR_FD_CONN;
+
+	if(DEBUG) printf("connect to chip success\n");
+	if(try_load_ram_from_flash(flash_begin) != SUCCESS){
+		if(DEBUG) printf("load to ram failed\n");
+		return ERR_FW_DOWNLOAD;
+	}
+	if(DEBUG) printf("load to ram fin\n");
+
+	uint8_t recvData[BUF_SIZE];
+	uint32_t len=0;
+	while(1){
+		len = uart_read_bytes(UART_PORT, recvData, BUF_SIZE, 100 / portTICK_RATE_MS);
+		recvData[len] = '\0';
+		if(len > 0)
+			printf("%s\n", recvData);
+	}
+	return SUCCESS;
+}
+
 
 ERR_STATUS eds_loadParam_init(void){
 	SD_PARAM *sd_params = getSdParams();

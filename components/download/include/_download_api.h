@@ -202,5 +202,7 @@ ERR_STATUS compare_result(void);
 uint32_t run_spiflash_command(uint32_t spiflash_command, uint8_t* raw_data,\
 								uint16_t datalen, uint32_t read_bits);
 
+ERR_STATUS try_load_ram_from_flash(uint32_t flash_begin);
+
 
 #endif //__DOWNLOAD_API_H__

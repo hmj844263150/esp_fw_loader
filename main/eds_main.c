@@ -52,6 +52,9 @@ const int TIME_SYNC_BIT = BIT2;
 #define GPIO_INPUT_PIN_SEL ((uint64_t)(((uint64_t)1)<<PIN_KEY))
 
 
+enum BOARD_TYPE board_type = BOT_8089AGING;
+
+
 void key_io_init(void){	
 	gpio_config_t io_conf;    
 	//disable interrupt    
@@ -132,16 +135,17 @@ static void initialise_wifi(void)
     ESP_ERROR_CHECK( esp_wifi_start() );
 }
 
-static ERR_STATUS esd_sys_init(void){
-	if(eds_driver_init() != SUCCESS){
+static ERR_STATUS esd_sys_init(enum BOARD_TYPE board_type){
+	if(eds_driver_init(board_type) != SUCCESS){
 		printf("eds_driver_init failed\n");
 		return 1;
 	}
-	//initial download param(get from SD card)
-	eds_loadParam_init();
-	xEventGroupSetBits(download_event_group, RTC_INIT_BIT);
-	
-	initialise_wifi();
+	if(board_type == BOT_WROVERKIT){
+		//initial download param(get from SD card)
+		eds_loadParam_init();
+		xEventGroupSetBits(download_event_group, RTC_INIT_BIT);
+		initialise_wifi();
+	}
 	return SUCCESS;
 }
 
@@ -235,6 +239,49 @@ void eds_task(void *pvParameter)
 	}
 
 ERR_OVER:
+	vTaskDelete(NULL);
+}
+
+#define FLASH_START		0x200000
+void aging_task(void *pvParameter){
+	bool opt_flag = false;
+	char mdl_logs[1024];
+	
+	if (xSemConnet == NULL)
+        xSemConnet = xSemaphoreCreateBinary();
+
+    xSemaphoreGive(xSemConnet);
+	
+	ERR_STATUS err_no = 0;
+	int module_status = MS_WAIT_MODULE;
+
+	while(1)
+	{
+		switch(module_status){
+			case MS_WAIT_MODULE:
+				if(xSemaphoreTake(xSemConnet, 100 / portTICK_PERIOD_MS) == pdTRUE){
+					module_status = MS_LOAD_RAM;
+				}
+				break;
+			case MS_LOAD_RAM:
+				if(eds_8089_aging(FLASH_START) != SUCCESS){
+					opt_flag = false;
+					printf("download not success, but you can try again\n");
+					module_status = MS_WAIT_MODULE;
+				}
+				else{
+					opt_flag = true;
+					module_status = MS_WAIT_MODULE;
+				}
+				break;
+			default:
+				printf("get an error case of module_status:%d\n", module_status);
+				goto ERR_OVER;
+				break;
+			}
+
+	}
+	ERR_OVER:
 	vTaskDelete(NULL);
 }
 
@@ -368,17 +415,23 @@ void app_main()
 	printf("***esp_download_solution start***\n");
 	printf("free heap size:%d\n", system_get_free_heap_size());
 	
-	download_event_group = xEventGroupCreate();
-	if(esd_sys_init() != SUCCESS){printf("system init failed\n");exit(0);}
-	xEventGroupWaitBits(download_event_group, CONNECTED_BIT,
-                        false, true, WIFI_CONN_TIMEOUT/portTICK_RATE_MS);
 
-	//xTaskCreate(&LCD_test_task, "LCD_test_task", 2048, NULL, 4, NULL);
+	download_event_group = xEventGroupCreate();
+	if(esd_sys_init(board_type) != SUCCESS){printf("system init failed\n");exit(0);}
+
+	if(board_type == BOT_WROVERKIT){
+		xEventGroupWaitBits(download_event_group, CONNECTED_BIT,
+                        	false, true, WIFI_CONN_TIMEOUT/portTICK_RATE_MS);
+		xTaskCreate(&LCD_test_task, "LCD_test_task", 2048, NULL, 4, NULL);
+		// task for normal load
+		xTaskCreate(&eds_task, "eds_task", 1024*40, NULL, 5, NULL);
+		xTaskCreate(&rtc_task, "rtc_task", 1024*8, NULL, 4, NULL);
+		xTaskCreate(&key_task, "key_task", 2048, NULL, 6, NULL);
+	}
+	else if(board_type == BOT_8089AGING){
+		// task for 8089 burn-in aging test
+		xTaskCreate(&aging_task, "aging_task", 1024*40, NULL, 5, NULL);
+	}
+
 	
-   	xTaskCreate(&eds_task, "eds_task", 1024*40, NULL, 5, NULL);
-    xTaskCreate(&key_task, "key_task", 2048, NULL, 6, NULL);
-	xTaskCreate(&rtc_task, "rtc_task", 1024*8, NULL, 4, NULL);
-	printf("free heap size:%d\n", system_get_free_heap_size());
-	
-	//xTaskCreate();
 }

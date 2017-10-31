@@ -4,18 +4,28 @@
 #include "driver/uart.h"
 #include "eds_error_no.h"
 
-#define DEBUG		1
+#define DEBUG		0
 #define RUN_STUB	1
 #define NEW_VERSION	1
 
 #define USE_SPI_SEND_FW	0 //if use spi to send fw
 
-#define UART1_TXD  (26)
-#define UART1_RXD  (27)
+// for wrover kit
+//#define UART1_TXD  (26)
+//#define UART1_RXD  (27)
+//#define UART1_RTS  (18)
+//#define UART1_CTS  (19)
+//#define ESP_CHIP_EN	(16)
+//#define ESP_GPIO_0	(17)
+
+// for 8089 aging test board
+#define UART1_TXD  (23)
+#define UART1_RXD  (22)
+#define ESP_CHIP_EN	(18)
+#define ESP_GPIO_0	(19)
 #define UART1_RTS  (18)
 #define UART1_CTS  (19)
-#define ESP_CHIP_EN	(16)
-#define ESP_GPIO_0	(17)
+
 
 #define UART_PORT	UART_NUM_1
 #define BUF_SIZE (1024)
